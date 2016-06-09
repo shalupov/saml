@@ -215,6 +215,10 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
 
+	if assertion.Subject != nil && assertion.Subject.NameID != nil {
+		token.Claims["Subject-NameID"] = []string{assertion.Subject.NameID.Value}
+	}
+
 	if assertion.AttributeStatement != nil {
 		for _, attr := range assertion.AttributeStatement.Attributes {
 			valueStrings := []string{}
