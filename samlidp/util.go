@@ -1,6 +1,6 @@
 package samlidp
 
-import "github.com/crewjam/saml"
+import "github.com/shalupov/saml"
 
 func randomBytes(n int) []byte {
 	rv := make([]byte, n)

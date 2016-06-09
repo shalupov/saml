@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/crewjam/saml"
+	"github.com/shalupov/saml"
 	"github.com/zenazn/goji/web"
 )
 

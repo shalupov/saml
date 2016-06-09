@@ -9,7 +9,7 @@ import (
 
 	. "gopkg.in/check.v1"
 
-	"github.com/crewjam/saml"
+	"github.com/shalupov/saml"
 	"github.com/dgrijalva/jwt-go"
 )
 
