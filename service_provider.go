@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/crewjam/go-xmlsec"
+	//"github.com/crewjam/go-xmlsec"
 )
 
 // ServiceProvider implements SAML Service provider.
@@ -346,6 +346,7 @@ func (sp *ServiceProvider) ParseResponse(req *http.Request, possibleRequestIDs [
 
 	var assertion *Assertion
 	if resp.EncryptedAssertion == nil {
+		/*
 		if err := xmlsec.Verify(sp.getIDPSigningCert(), rawResponseBuf,
 			xmlsec.SignatureOptions{
 				XMLID: []xmlsec.XMLIDOption{{
@@ -357,11 +358,14 @@ func (sp *ServiceProvider) ParseResponse(req *http.Request, possibleRequestIDs [
 			retErr.PrivateErr = fmt.Errorf("failed to verify signature on response: %s", err)
 			return nil, retErr
 		}
+		*/
 		assertion = resp.Assertion
 	}
 
 	// decrypt the response
 	if resp.EncryptedAssertion != nil {
+		panic("resp.EncryptedAssertion not supported")
+		/*
 		plaintextAssertion, err := xmlsec.Decrypt([]byte(sp.Key), resp.EncryptedAssertion.EncryptedData)
 		if err != nil {
 			retErr.PrivateErr = fmt.Errorf("failed to decrypt response: %s", err)
@@ -383,6 +387,7 @@ func (sp *ServiceProvider) ParseResponse(req *http.Request, possibleRequestIDs [
 
 		assertion = &Assertion{}
 		xml.Unmarshal(plaintextAssertion, assertion)
+		*/
 	}
 
 	if err := sp.validateAssertion(assertion, possibleRequestIDs, now); err != nil {
