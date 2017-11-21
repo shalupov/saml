@@ -132,8 +132,9 @@ func (m *Middleware) RequireAccount(handler http.Handler) http.Handler {
 
 		secretBlock, _ := pem.Decode([]byte(m.ServiceProvider.Key))
 		state := jwt.New(jwt.GetSigningMethod("HS256"))
-		state.Claims["id"] = req.ID
-		state.Claims["uri"] = r.URL.String()
+		claims := state.Claims.(jwt.MapClaims)
+		claims["id"] = req.ID
+		claims["uri"] = r.URL.String()
 		signedState, err := state.SignedString(secretBlock.Bytes)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -171,7 +172,7 @@ func (m *Middleware) getPossibleRequestIDs(r *http.Request) []string {
 			log.Printf("... invalid token %s", err)
 			continue
 		}
-		rv = append(rv, token.Claims["id"].(string))
+		rv = append(rv, token.Claims.(jwt.MapClaims)["id"].(string))
 	}
 
 	// If IDP initiated requests are allowed, then we can expect an empty response ID.
@@ -205,7 +206,7 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
-		redirectURI = state.Claims["uri"].(string)
+		redirectURI = state.Claims.(jwt.MapClaims)["uri"].(string)
 
 		// delete the cookie
 		stateCookie.Value = ""
@@ -214,9 +215,10 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 	}
 
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
+	tokenClaims := token.Claims.(jwt.MapClaims)
 
 	if assertion.Subject != nil && assertion.Subject.NameID != nil {
-		token.Claims["Subject-NameID"] = []string{assertion.Subject.NameID.Value}
+		tokenClaims["Subject-NameID"] = []string{assertion.Subject.NameID.Value}
 	}
 
 	if assertion.AttributeStatement != nil {
@@ -229,11 +231,11 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 			if claimName == "" {
 				claimName = attr.Name
 			}
-			token.Claims[claimName] = valueStrings
+			tokenClaims[claimName] = valueStrings
 		}
 	}
 
-	token.Claims["exp"] = saml.TimeNow().Add(cookieMaxAge).Unix()
+	tokenClaims["exp"] = saml.TimeNow().Add(cookieMaxAge).Unix()
 	signedToken, err := token.SignedString(secretBlock.Bytes)
 	if err != nil {
 		panic(err)
@@ -283,7 +285,7 @@ func (m *Middleware) IsAuthorized(r *http.Request) bool {
 		}
 	}
 
-	for claimName, claimValue := range token.Claims {
+	for claimName, claimValue := range token.Claims.(jwt.MapClaims) {
 		if claimName == "exp" {
 			continue
 		}
